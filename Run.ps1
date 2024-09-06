@@ -23,9 +23,6 @@ function Read-YamlConfig {
 
 # Function to generate a unique SID
 function Get-UniqueSid {
-    param (
-        [int]$startSid
-    )
     $script:currentSid++
     return $script:currentSid
 }
@@ -87,6 +84,13 @@ function To-Rules {
     )
     $outputFile = ""
     $NewRules = Generate-Rules -RegexMatches $RegexMatches -PatternConfig $PatternConfig
+
+    # Add sid and rev to rules
+    $NewRules | ForEach-Object {
+        $sid = Get-UniqueSid
+        $_ = $_ -replace "\{sid\}", $sid
+        $_ = $_ -replace "\{rev\}", $PatternConfig.rev
+    }
     if ( -not $NewRules) { Continue }
     if ($config.global.split_rules) {
         $outputFile = Join-Path $RuleDirectory "$($PatternConfig.Name)-$($FileSerial).rules"
@@ -186,25 +190,3 @@ if (-not (Test-Path $ruleDirectory)) {
 Process-IoCs -iocDirectory $iocDirectory -ruleDirectory $ruleDirectory -config $config
 
 Write-Host "Suricata rules have been generated and saved in the $ruleDirectory directory."
-
-# Main Script Execution
-# |
-# ├─ Read-YamlConfig
-# |
-# ├─ Process-IoCs
-# |
-# ├─ Get-ChildItem (to get IoC files)
-# |
-# ├─ Get-Content (to read IoCs from each file)
-# |
-# ├─ For each IoC:
-# |  |
-# |  ├─ For each pattern in config:
-# |     |
-# |     ├─ If IoC matches pattern:
-# |        |
-# |        ├─ Get-UniqueSid
-# |        |
-# |        ├─ Apply-Template
-# |
-# ├─ Out-File (to write generated rules)
