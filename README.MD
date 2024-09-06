@@ -16,9 +16,6 @@ To use the YamlRuleGenerator, follow these steps:
 
 ### Settings
 
-> [!IMPORTANT]
-> Configuration file if yaml formatted. Watch your indents!
-
 #### Global
 Global options for rule generation.
 
