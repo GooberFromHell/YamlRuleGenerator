@@ -12,7 +12,7 @@ To use the YamlRuleGenerator, follow these steps:
 
 ## Configuration
 
-The YamlRuleGenerator can be configured by modifying the `config.yaml` file.
+`config.yaml`
 
 ### Settings
 
