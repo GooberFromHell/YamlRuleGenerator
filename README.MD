@@ -1,6 +1,6 @@
 # YamlRuleGenerator
 
-The YamlRuleGenerator is apowershell script configured using a yaml configuration file. 
+The YamlRuleGenerator is a powershell script configured using yaml (But, what is that?)
 
 ## Usage
 
