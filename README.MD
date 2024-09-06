@@ -19,14 +19,38 @@ To use the YamlRuleGenerator, follow these steps:
 #### Global
 Global options for rule generation.
 
-| Setting            | Type   | Description                                                                                                    |
-| ------------------ | ------ | -------------------------------------------------------------------------------------------------------------- |
-| sid_start          | Int    | This is the starting number for the SID increment when creating rules. **Can be overridden in rule templates** |
-| revision           | Int    | This is the revision number applied to the end of each rule. **Can be overridden in rule templates.**          |
-| ioc_directory      | String | Path to the location of your Ioc Files. The file contents could have ones Ioc per line                         |
-| rules_directory    | String | Path to the location to store comleted rules and lists.                                                        |
-| split_rules        | Bool   | Option to split rules into seperate rule files based on the rules type.                                        |
-| add_rule_reference | Bool   | Option to add a reference to each rule of what file it was generated from                                      |
+```yaml
+global:
+  sid_start: 1000000
+  revision: 1
+  ioc_directory: iocs
+  rules_directory: rules
+  split_rules: true
+  add_rule_reference: true
+```
+#### Setting: global.sid_start
+- Type: Int 
+- Description: This is the starting number for the SID increment when creating rules. **Can be overridden in rule templates**
+
+#### Setting: global.revision
+- Type: Int 
+- Description: This is the revision number applied to the end of each rule. **Can be overridden in rule templates.** 
+
+#### Setting: global.ioc_directory
+- Type: String 
+- Description: Path to the location of your Ioc Files. The file contents could have ones Ioc per line 
+
+#### Setting: global.rules_directory
+- Type: String 
+- Description: Path to the location to store comleted rules and lists.    
+
+#### Setting: global.split_rules
+- Type: Bool 
+- Description: Option to split rules into seperate rule files based on the rules type. 
+
+#### Setting: global.add_rule_reference
+- Type: Bool 
+- Description: Option to add a reference to each rule of what file it was generated from   
 
 #### Templates
 Templates section contains a list of rule generation objects that control the identification of an Ioc, Its output, and default values. Each generation object have the following options:
