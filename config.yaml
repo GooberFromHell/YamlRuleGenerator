@@ -1,0 +1,110 @@
+# # $PWD = current script directory
+
+# ioc_directory: IOCs
+# rule_directory: Rules
+# patterns:
+#   http:
+#     regex: HTTP/1\.[01] (?<status_code>\d{3}) (?<status_msg>[^\r\n]*)
+#     template: alert http any any -> any any (msg:"HTTP ${status_code} ${status_msg}"; flow:established,to_server; content:"${0}"; http_stat_code; content:"${0}"; http_stat_msg;  sid:{1}; rev:1;)
+
+#   ja3:
+#     regex: (?<ja3_hash>[a-fA-F0-9]{32})
+#     template: alert tls any any -> any any (msg:"JA3 Fingerprint Detected"; flow:established,to_server; ja3.hash; content:"{0}";  sid:{1}; rev:1;)
+
+#   domain:
+#     regex: (?<domain>([\w\d-]+\.)+[a-zA-Z]{2,})
+#     template: alert dns any any -> any any (msg:"Domain request for {0}"; flow:to_server; dns.query.name; content:"{0}"; nocase;  sid:{1}; rev:1;)
+
+#   url:
+#     regex: ^(?:https?://)?(?<ip>(\d{1,3}\.){3}\d{1,3})?(?<domain>[\w.-]+\.\w{2,5})(?::(?<port>\d+))?(?<uri>/[^/]+)*(?:/(?<filename>[^/]+))?$
+
+#   file:
+#     regex: (?<file_name>[^/]+)\.(?<file_ext>[a-zA-Z0-9]{1,4})
+#     template: alert file any any -> any any (msg:"File request for {0}"; flow:to_server; file.name; content:"${0}"; nocase; sid:{1}; rev:1;)
+
+#   uri:
+#     template: 'alert http any any -> any any (msg:"URI request for {0}"; flow:to_server; http.host; content:"${0}"; http_uri;  content: "{1}";  sid:{2}; rev:1;)'
+
+#   ip:
+#     regex: (?<ip>(\d{1,3}\.){3}\d{1,3})
+#     template: alert ip any any -> {0} any (msg:"IP address detected"; flow:established; content:"{0}"; sid:{1}; rev:1;)
+
+# # Aliases
+# aliases:
+#   url:
+#     - uri
+#     - domain
+#     - port
+#     - ip
+#     - file
+
+# Suricata Rule Generation Configuration
+
+global:
+  sid_start: 1000000
+  revision: 1
+  ioc_directory: "iocs"
+  rules_directory: "rules"
+  split_rules: true # Set to false to output all rules to a single file
+  add_rule_reference: true # Set to false to omit filename references in rules
+
+templates:
+  - name: ip
+    regex:
+      - '(?<ip>(\d{1,3}\.){3}\d{1,3})'
+    template: 'alert ip {sip} {sport} -> {dip} {dport} (msg:"{msg}"; sid:{sid}; rev:{rev};)'
+    defaults:
+      sip: any
+      sport: any
+      dip: "{ip}"
+      dport: any
+      msg: "Known malicious IP address detected"
+
+  - name: dns
+    regex:
+      - '(?!(\d{1,3}\.)\d{1,3})(?<domain>([\w-]+\.)+\w{2,})'
+    template: 'alert dns {sip} {sport} -> {dip} {dport} (msg:"{msg}"; dns.query.name; content:"{domain}"; nocase; sid:{sid}; rev:{rev};)'
+    defaults:
+      sip: any
+      sport: any
+      dip: any
+      dport: 53
+      msg: "Known malicious domain detected"
+
+  - name: tls
+    lists:
+      - md5
+    regex:
+      - "(?<ja3_hash>[a-fA-F0-9]{32})"
+    template: 'alert tls {sip} {sport} -> {dip} {dport} (msg:"{msg}"; flow:established,to_server; ja3_hash; content:"{ja3_hash}"; sid:{sid}; rev:{rev};)'
+    defaults:
+      sip: any
+      sport: any
+      dip: any
+      dport: any
+      msg: "Known malicious hash detected"
+
+  - name: uri
+    # TODO: Fix Url regex
+    regex:
+      - '^(?:https?://)?(?<domain>(?:\d{1,3}\.){3}\d{1,3}|(?:[\w-]+\.)+[a-zA-Z]{2,})(?::(?<port>\d+))?(?<uri>/[^/\r\n?]*)?(?:/(?<filename>[^/\r\n?]+\.\w+))?'
+    template: 'alert http {sip} {sport} -> {dip} {dport} (msg:"{msg}"; flow:to_server; http_host; content:"{domain}"; http_uri; content:"{uri}"; sid:{sid}; rev:{rev};)'
+    required:
+      - domain
+      - uri
+    defaults:
+      sip: any
+      sport: any
+      dip: any
+      dport: any
+      msg: "Known malicious uri detected"
+
+  # - name: file
+  #   regex: '(?<file_name>[^/]+)\.(?<file_ext>[a-zA-Z0-9]{1,4})'
+  #   template: 'alert file {sip} {sport} -> {dip} {dport} (msg:"{msg}"; flow:to_server; file_name; content:"{file_name}"; nocase; sid:{sid}; rev:{rev};)'
+  #   defaults:
+  #     sip: any
+  #     sport: any
+  #     dip: any
+  #     dport: any
+  #     msg: "Known malicious file detected"
