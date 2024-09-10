@@ -84,6 +84,7 @@ function To-Rules {
     )
     $outputFile = ""
     $NewRules = Generate-Rules -RegexMatches $RegexMatches -PatternConfig $PatternConfig
+    $NewRules = $NewRules | Sort-Object -Unique
 
     # Add sid and rev to rules
     $NewRules | ForEach-Object {
@@ -91,14 +92,15 @@ function To-Rules {
         $_ = $_ -replace "\{sid\}", $sid
         $_ = $_ -replace "\{rev\}", $PatternConfig.rev
     }
+
     if ( -not $NewRules) { Continue }
     if ($config.global.split_rules) {
         $outputFile = Join-Path $RuleDirectory "$($PatternConfig.Name)-$($FileSerial).rules"
-        $NewRules | Sort-Object -Unique | Out-File -FilePath $outputFile -Append
+        $NewRules | Out-File -FilePath $outputFile -Append
     }
     else {
         $outputFile = Join-Path $RuleDirectory "combined_rules-$($FileSerial).rules"
-        $NewRules | Sort-Object -Unique | Out-File -FilePath $outputFile -Append 
+        $NewRules | Out-File -FilePath $outputFile -Append 
     }
 
     return $outputFile
@@ -139,7 +141,7 @@ function Process-IoCs {
     $files = @()
     foreach ($iocFile in $iocFiles) {
 
-        $iocs = Get-Content $iocFile.FullName
+        $iocs = Get-Content $iocFile.FullName -Raw
         foreach ($PatternConfig in $config.templates) {
             $Regex = $PatternConfig.regex -join "|"
             $RegexMatches = [regex]::Matches($iocs, $Regex)
