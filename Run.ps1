@@ -27,11 +27,36 @@ function Get-UniqueSid {
     return $script:currentSid
 }
 
+# Function to return all matches in an array
+function All-RegexMatches {
+    [CmdletBinding()]
+    param (
+        [string[]]$Content,
+        [string[]]$Regex
+    )
+
+    $found_matches = @()
+    foreach ($line in $Content) {
+        foreach ($regex in $Regex) {
+            if ($line -match $regex) {
+                $found_matches += $Matches -as [hashtable] | ForEach-Object {
+                    $hash = @{}
+                    $_.GetEnumerator() | Where-Object { $_.Name -as [int] -lt 0 -and $_.Value } | ForEach-Object {
+                        $hash[$_.Name] = $_.Value
+                    }
+                    return $hash
+                }
+            }
+        }
+    }
+    return $found_matches
+}
+
 # Function to generate rules from an array of matches
 function Generate-Rules {
     [CmdletBinding()]
     param (
-        [System.Text.RegularExpressions.MatchCollection]$RegexMatches,
+        [Object[]]$RegexMatches,
         [Object]$PatternConfig
     )
 
@@ -41,19 +66,10 @@ function Generate-Rules {
     $Defaults = $PatternConfig.Defaults
     foreach ($match in $RegexMatches) {
 
-        # Get unstupified $match hashtable
-        $CleanMatch = @{}
-        $match.Groups.GetEnumerator() | Where-Object { $_.Name -as [int] -lt 0 -and $_.Value }  | ForEach-Object {
-            $key = $_.Name
-            $CleanMatch[$key] = $_.Value
-        }
-
         # Check if all required fields are present
         if ($Required) {
-            $Missing = Compare-Object $Required $CleanMatch.Keys
-            if ($Missing -notcontains '==') {
-                continue
-            }
+            $Missing = ($Required | ForEach-Object { $Match.Keys -contains $_ } | Where-Object { $_ -eq $false }) 
+            if ($Missing -eq $false) { Continue }
         }
 
         # Copy Tempalte
@@ -65,8 +81,8 @@ function Generate-Rules {
         }
 
         # Next replace parameters with rule matched paramters
-        foreach ($key in $CleanMatch.Keys) {
-            $NewRule = $NewRule -replace "\{$key\}", $CleanMatch.$key
+        foreach ($key in $match.Keys) {
+            $NewRule = $NewRule -replace "\{$key\}", $match.$key
         }
 
         $rules += $NewRule
@@ -77,13 +93,16 @@ function Generate-Rules {
 # Function to handle generating rules
 function To-Rules {
     param (
-        [System.Text.RegularExpressions.MatchCollection]$RegexMatches,
+        [object[]]$RegexMatches,
         [hashtable]$PatternConfig,
         [string]$RuleDirectory,
         [string]$FileSerial
     )
     $outputFile = ""
     $NewRules = Generate-Rules -RegexMatches $RegexMatches -PatternConfig $PatternConfig
+
+    if ( -not $NewRules) { Continue }
+
     $NewRules = $NewRules | Sort-Object -Unique
 
     # Add sid and rev to rules
@@ -92,10 +111,6 @@ function To-Rules {
         $_ = $_ -replace "\{sid\}", $sid
         $_ = $_ -replace "\{rev\}", $PatternConfig.rev
     }
-
-    if ( -not $NewRules) { Continue }
-
-    $NewRules = $NewRules | Sort-Object -Unique
 
     if ($config.global.split_rules) {
         $outputFile = Join-Path $RuleDirectory "$($PatternConfig.Name)-$($FileSerial).rules"
@@ -119,8 +134,10 @@ function To-Lists {
     )
 
     $AllValues = $RegexMatches | ForEach-Object {
-        ($_.Groups.GetEnumerator() | Where-Object { $_.Name -as [int] -lt 0 -and $_.Value }).Value
+        ($_.GetEnumerator() | Where-Object { $_.Name -as [int] -lt 0 -and $_.Value }).Value
     }
+
+    $AllValues = $AllValues | Sort-Object -Unique
     foreach ($List in $Lists) {
         $outputFile = Join-Path $RuleDirectory "$($List)-$($FileSerial).txt"   
         $AllValues | Out-File -FilePath $outputFile -Append
@@ -144,10 +161,12 @@ function Process-IoCs {
     $files = @()
     foreach ($iocFile in $iocFiles) {
 
-        $iocs = Get-Content $iocFile.FullName -Raw
+        $iocs = Get-Content $iocFile.FullName
         foreach ($PatternConfig in $config.templates) {
             $Regex = $PatternConfig.regex -join "|"
-            $RegexMatches = [regex]::Matches($iocs, $Regex)
+
+            # Add function to return all matches in an array
+            $RegexMatches = All-RegexMatches -Content $iocs -Regex $Regex
 
             # If there are no matches, continue to the next pattern
             if (-not $RegexMatches) { continue }

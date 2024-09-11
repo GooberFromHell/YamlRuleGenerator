@@ -1,8 +1,7 @@
-
 global:
   sid_start: 1000000
   revision: 1
-  ioc_directory: Z:\Old\IOCs
+  ioc_directory: iocs
   rules_directory: rules
   split_rules: true
   add_rule_reference: true
@@ -46,7 +45,7 @@ templates:
   - name: uri
     # TODO: Fix Url regex
     regex:
-      - '^((?<protcol>.*?)://)?(?<domain>.*(?::(?<dport>\d+))?)(?<uri>/.*?\n)$'
+      - '^(?:https?://)?(?<domain>([\w-\.]+)\.\w+?)(?::(?<port>\d+))?(?<uri>/.*?)$'
     template: 'alert http {sip} {sport} -> {dip} {dport} (msg:"{msg}"; flow:to_server; http_host; content:"{domain}"; http_uri; content:"{uri}"; sid:{sid}; rev:{rev};)'
     required:
       - domain
