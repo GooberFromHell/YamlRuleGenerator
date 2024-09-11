@@ -94,6 +94,9 @@ function To-Rules {
     }
 
     if ( -not $NewRules) { Continue }
+
+    $NewRules = $NewRules | Sort-Object -Unique
+
     if ($config.global.split_rules) {
         $outputFile = Join-Path $RuleDirectory "$($PatternConfig.Name)-$($FileSerial).rules"
         $NewRules | Out-File -FilePath $outputFile -Append
