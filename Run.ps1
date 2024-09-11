@@ -90,13 +90,63 @@ function Generate-Rules {
     return $rules
 }
 
+# Function that adds metadata to rules;
+function Add-Metadata {
+    [CmdletBinding()]
+    param (
+        [string[]]$Rules,
+        [hashtable]$Metadata
+    )
+    $MetaData = @()
+    $Metadata.GetEnumerator() | ForEach-Object {
+        $MetaData += "$_.Key $_.Value"
+    } -join ", "
+    $Rules =  $Rules | ForEach-Object {
+        $_ = $_ -replace "\{metadata\}", $MetaData
+    }
+
+    return $Rules
+}
+
+function Get-Metadata {
+    [CmdletBinding()]
+    param (
+        [hashtable]$MetaArgs
+    )
+
+    $MetadataOptions = @{}
+
+    # Copy global metadata
+    if ( -n $global.metadata) {
+        $MetadataOptions = $global.metadata
+    }
+
+    # Overwrite global metadata with rule specific metadata
+    if ( -n $PatternConfig.metadata) {
+        $MetadataOptions = $MetadataOptions + $PatternConfig.metadata
+    }
+
+    $Metadata = @{}
+    foreach ($key in $MetadataOptions.Keys) {
+        switch ($key) {
+            'add_reference' { 
+                if ($MetadataOptions[$key]) { $Metadata['ref'] = "$($MetaArgs.SourceFIle)" }
+             }
+            Default {}
+        }
+    }
+
+    return $Metadata
+}
+
 # Function to handle generating rules
 function To-Rules {
     param (
         [object[]]$RegexMatches,
         [hashtable]$PatternConfig,
         [string]$RuleDirectory,
-        [string]$FileSerial
+        [string]$FileSerial,
+        [string]$SourceFile
     )
     $outputFile = ""
     $NewRules = Generate-Rules -RegexMatches $RegexMatches -PatternConfig $PatternConfig
@@ -110,6 +160,20 @@ function To-Rules {
         $sid = Get-UniqueSid
         $_ = $_ -replace "\{sid\}", $sid
         $_ = $_ -replace "\{rev\}", $PatternConfig.rev
+    }
+
+    $meta_args = @{
+        PatternConfig = $PatternConfig
+        SourceFile = $SourceFile
+        FileSerial = $FileSerial
+    }
+
+    # Get metadata opions
+    $Metadata = Get-Metadata -Metadata $meta_args
+
+    # Overright rule specific metadata
+    if ( $Metadata) {
+        $NewRules = Add-Metadata -Rules $NewRules -Metadata $Metadata
     }
 
     if ($config.global.split_rules) {
@@ -178,7 +242,14 @@ function Process-IoCs {
 
             # Generate Rules if the pattern config has rule templates
             if ($PatternConfig.template) {
-                $files += to-Rules -RegexMatches $RegexMatches -PatternConfig $PatternConfig -RuleDirectory $ruleDirectory -FileSerial $FileSerial
+                $signature_args = @{
+                    RegexMatches = $RegexMatches
+                    PatternConfig = $PatternConfig
+                    RuleDirectory = $ruleDirectory
+                    SourceFile = $iocFile
+                    FileSerial = $FileSerial
+                }
+                $files += to-Rules $signature_args
             }
         }
     }

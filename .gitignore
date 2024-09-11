@@ -3,6 +3,7 @@
 .vscode/
 
 # Ignore test iocs and rules folder
+<<<<<<< HEAD
 /iocs/
 /rules/
 
@@ -27,3 +28,7 @@ secrets.env
 # Ignore operating system and editor-specific files
 .DS_Store
 Thumbs.db
+=======
+iocs/
+rules/
+>>>>>>> 438b3f6ca8cb12c883aa5b648e2b6728e7a2f071

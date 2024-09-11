@@ -3,8 +3,9 @@ global:
   revision: 1
   ioc_directory: iocs
   rules_directory: rules
-  split_rules: true
-  add_rule_reference: true
+  split_rules: false
+  metadata:
+    rule_reference: true
 
 templates:
   - name: ip
@@ -43,7 +44,6 @@ templates:
       msg: "Known malicious hash detected"
 
   - name: uri
-    # TODO: Fix Url regex
     regex:
       - '^(?:https?://)?(?<domain>([\w-\.]+)\.\w+?)(?::(?<port>\d+))?(?<uri>/.*?)$'
     template: 'alert http {sip} {sport} -> {dip} {dport} (msg:"{msg}"; flow:to_server; http_host; content:"{domain}"; http_uri; content:"{uri}"; sid:{sid}; rev:{rev};)'
