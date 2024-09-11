@@ -92,13 +92,16 @@ function To-Rules {
         $_ = $_ -replace "\{rev\}", $PatternConfig.rev
     }
     if ( -not $NewRules) { Continue }
+
+    $NewRules = $NewRules | Sort-Object -Unique
+
     if ($config.global.split_rules) {
         $outputFile = Join-Path $RuleDirectory "$($PatternConfig.Name)-$($FileSerial).rules"
-        $NewRules | Sort-Object -Unique | Out-File -FilePath $outputFile -Append
+        $NewRules | Out-File -FilePath $outputFile -Append
     }
     else {
         $outputFile = Join-Path $RuleDirectory "combined_rules-$($FileSerial).rules"
-        $NewRules | Sort-Object -Unique | Out-File -FilePath $outputFile -Append 
+        $NewRules | Out-File -FilePath $outputFile -Append 
     }
 
     return $outputFile
