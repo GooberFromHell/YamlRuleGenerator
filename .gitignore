@@ -3,5 +3,5 @@
 .vscode/
 
 # Ignore test iocs and rules folder
-**/iocs/
-**/rules/
+iocs/
+rules/
