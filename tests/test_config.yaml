@@ -1,0 +1,58 @@
+global:
+  sid_start: 1000000
+  revision: 1
+  ioc_directory: iocs
+  rules_directory: rules
+  split_rules: false
+  metadata:
+    rule_reference: true
+
+templates:
+  - name: ip
+    regex:
+      - '(?<ip>(\d{1,3}\.){3}\d{1,3})'
+    template: 'alert ip {sip} {sport} -> {dip} {dport} (msg:"{msg}"; sid:{sid}; rev:{rev};)'
+    defaults:
+      sip: any
+      sport: any
+      dip: "{ip}"
+      dport: any
+      msg: "Known malicious IP address detected"
+
+  - name: dns
+    regex:
+      - '(?!(\d{1,3}\.)\d{1,3})(?<domain>([\w-]+\.)+\w{2,})'
+    template: 'alert dns {sip} {sport} -> {dip} {dport} (msg:"{msg}"; dns.query.name; content:"{domain}"; nocase; sid:{sid}; rev:{rev};)'
+    defaults:
+      sip: any
+      sport: any
+      dip: any
+      dport: 53
+      msg: "Known malicious domain detected"
+
+  - name: tls
+    lists:
+      - md5
+    regex:
+      - "(?<ja3_hash>[a-fA-F0-9]{32})"
+    template: 'alert tls {sip} {sport} -> {dip} {dport} (msg:"{msg}"; flow:established,to_server; ja3_hash; content:"{ja3_hash}"; sid:{sid}; rev:{rev};)'
+    defaults:
+      sip: any
+      sport: any
+      dip: any
+      dport: any
+      msg: "Known malicious hash detected"
+
+  - name: uri
+    regex:
+      - '^(?:https?://)?(?<domain>([\w-\.]+)\.\w+?)(?::(?<port>\d+))?(?<uri>/.*?)$'
+    template: 'alert http {sip} {sport} -> {dip} {dport} (msg:"{msg}"; flow:to_server; http_host; content:"{domain}"; http_uri; content:"{uri}"; sid:{sid}; rev:{rev};)'
+    required:
+      - domain
+      - uri
+    defaults:
+      sip: any
+      sport: any
+      dip: any
+      dport: any
+      msg: "Known malicious uri detected"

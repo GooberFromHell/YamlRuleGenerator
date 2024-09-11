@@ -101,7 +101,7 @@ function Add-Metadata {
     $Metadata.GetEnumerator() | ForEach-Object {
         $MetaData += "$_.Key $_.Value"
     } -join ", "
-    $Rules =  $Rules | ForEach-Object {
+    $Rules = $Rules | ForEach-Object {
         $_ = $_ -replace "\{metadata\}", $MetaData
     }
 
@@ -131,7 +131,7 @@ function Get-Metadata {
         switch ($key) {
             'add_reference' { 
                 if ($MetadataOptions[$key]) { $Metadata['ref'] = "$($MetaArgs.SourceFIle)" }
-             }
+            }
             Default {}
         }
     }
@@ -164,8 +164,8 @@ function To-Rules {
 
     $meta_args = @{
         PatternConfig = $PatternConfig
-        SourceFile = $SourceFile
-        FileSerial = $FileSerial
+        SourceFile    = $SourceFile
+        FileSerial    = $FileSerial
     }
 
     # Get metadata opions
@@ -243,11 +243,11 @@ function Process-IoCs {
             # Generate Rules if the pattern config has rule templates
             if ($PatternConfig.template) {
                 $signature_args = @{
-                    RegexMatches = $RegexMatches
+                    RegexMatches  = $RegexMatches
                     PatternConfig = $PatternConfig
                     RuleDirectory = $ruleDirectory
-                    SourceFile = $iocFile
-                    FileSerial = $FileSerial
+                    SourceFile    = $iocFile
+                    FileSerial    = $FileSerial
                 }
                 $files += to-Rules $signature_args
             }
