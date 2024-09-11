@@ -3,27 +3,5 @@
 .vscode/
 
 # Ignore test iocs and rules folder
-/iocs/
-/rules/
-
-# Ignore compiled binaries and build output
-/bin/
-/build/
-/out/
-
-# Ignore dependencies and package managers
-/node_modules/
-/packages/
-
-# Ignore logs and temporary files
-/logs/
-/temp/
-
-
-# Ignore sensitive or environment-specific files
-.env
-secrets.env
-
-# Ignore operating system and editor-specific files
-.DS_Store
-Thumbs.db
+**/iocs/
+**/rules/
