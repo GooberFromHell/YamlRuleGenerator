@@ -1,4 +1,16 @@
 using module ./lib/PatternConfig.psm1
+
+# Import the PowerShell-Yaml module
+if (-not (Get-Module -Name powershell-yaml -ListAvailable)) {
+    Register-PSRepository -Name LocalPackages -SourceLocation $(Join-Path $(Get-Location) "packages") -InstallationPolicy Trusted
+    Publish-Module -Path "$(Get-Location)\packages\powershell-yaml" -Repository LocalPackages
+    Install-Module -Name powershell-yaml -Force -Scope CurrentUser -Repository LocalPackages
+    Unregister-PSRepository -Name LocalPackages
+}
+
+# Import required module for YAML parsing
+Import-Module powershell-yaml
+
 # Get current scripts location 
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
