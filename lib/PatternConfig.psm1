@@ -10,8 +10,9 @@ class PatternConfig {
     [hashtable]$Defaults
     [hashtable]$Metadata
     [string]$SourceFile = $null
-    static [string]$Errors = $null
-    static [string[]]$Signatures = @()
+    [string[]]$Signatures = @()
+    [string]$Errors = $null
+    
     
     # Constructor to handle required and optional properties
     PatternConfig(
@@ -87,7 +88,16 @@ class PatternConfig {
         if ($this.Metadata.Keys -le 0) { return "" }
         $md = @()
         foreach ($key in $this.Metadata.Keys) {
-            $md += "{0} {1}" -f $key, $this.Metadata[$key]
+            switch ($key) {
+                "add_reference" {
+                    if (-z $this.SourceFile) { break }
+                    $md += "reference:file,'{0}'" -f $key, $this.SourceFile
+                    
+                }
+                default {
+                    $md += "{0}:{1}" -f $key, $this.Metadata[$key]
+                }
+            }
         }
         return "metadata: {0};" -f "$($md -join ', ')"
     }
@@ -99,7 +109,7 @@ class PatternConfig {
             switch ($key) {
                 "reference" {
                     if ($this.SourceFile) {
-                        $ops += "{0}:file,'{1}';" -f $key, $this.SourceFile
+                        $ops += "{0}:file,{1};" -f $key, $this.SourceFile
                     }
                 }
                 default {
@@ -116,7 +126,7 @@ class PatternConfig {
             $signature = $this.Template
 
             # First replace parameters with rule defaults
-            foreach ($key in $this.Defaults) {
+            foreach ($key in $this.Defaults.Keys) {
                 $signature = $signature -replace "\{$key\}", $this.Defaults.$key
             }
 
@@ -124,14 +134,15 @@ class PatternConfig {
             foreach ($key in $match.Keys) {
                 $signature = $signature -replace "\{$key\}", $match.$key
             }
-            
+
             # Replace Options with the generated options
-            $signature = $signature -replace "\{sid\}", "{0} {sid}" -f $this.GenerateOptions()
+            $signature = $signature -replace "sid:", $( "{0} sid:" -f $this.GenerateOptions() )
 
             # Repalce metadata with the generated metadata
-            $signature = $signature -replace "\{sid\}", "{0} {sid}" -f $this.GenerateMetaData()
+            $signature = $signature -replace "sid:", $( "{0} sid:" -f $this.GenerateMetaData() )
             
             $this.Signatures += $signature
+            
         }
     }
 }

@@ -6,8 +6,6 @@ if (-not (Get-Module -Name powershell-yaml -ListAvailable)) {
     Unregister-PSRepository -Name LocalPackages
 }
 
-Import-Module powershell-yaml
-
 # Import required module for YAML parsing
 Import-Module powershell-yaml
 

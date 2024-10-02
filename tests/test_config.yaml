@@ -5,7 +5,7 @@ global:
   rules_directory: rules
   split_rules: false
   metadata:
-    rule_reference: true
+    add_reference: true
 
 templates:
   - name: ip

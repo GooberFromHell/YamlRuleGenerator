@@ -29,12 +29,16 @@ foreach ($PatternConfig in $config.templates) {
     else {
         Write-Output "Pattern '$($pattern.Name)' is valid"
     }
-    $content = Get-Content -Path "$scriptPath\test_input.txt" 
+    $filename = "test_input.txt"
+    $content = Get-Content -Path "$scriptPath\$filename"
+    $pattern.SourceFile = $filename 
+
     foreach ($line in $content) {
         $match = $pattern.GetMatches($line)
         if ($match) {
             Write-Output "Match found for pattern '$($pattern.Name)' in line: $line"
         }
     }
-    $match = $pattern.GetMatches($content)
+    $pattern.Signatures
+
 }
