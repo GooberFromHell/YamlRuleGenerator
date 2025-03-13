@@ -7,7 +7,7 @@ The YamlRuleGenerator is a powershell script configured using yaml (But, what is
 To use the YamlRuleGenerator, follow these steps:
 
 1. Open the terminal and navigate to the `YamlRuleGenerator` directory.
-2. Configure the `config.yaml` accoding to your needs/envrionment
+2. Configure the `config.yaml` according to your needs/envrionment
 2. Run the command: `Run.ps1`.
 
 ## Configuration
