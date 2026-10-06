@@ -26,7 +26,8 @@ global:
   ioc_directory: iocs
   rules_directory: rules
   split_rules: true
-  add_rule_reference: true
+  metadata:
+    rule_reference: true
 ```
 #### Setting: global.sid_start
 - Type: Int 
@@ -48,9 +49,13 @@ global:
 - Type: Bool 
 - Description: Option to split rules into seperate rule files based on the rules type. 
 
-#### Setting: global.add_rule_reference
-- Type: Bool 
-- Description: Option to add a reference to each rule of what file it was generated from   
+#### Setting: global.metadata
+- Type: Object
+- Description: Metadata options applied to every generated rule. **Can be overridden per template** with a `metadata` block on the template. Rendered as a Suricata `metadata:` keyword injected before the closing `)` of the rule, or into a `{metadata}` placeholder if the template string contains one.
+
+#### Setting: global.metadata.rule_reference
+- Type: Bool
+- Description: Option to add `metadata:source <ioc file>;` to each rule, recording the IoC file it was generated from. Characters that Suricata does not allow in a metadata value are replaced with `_`.
 
 #### Templates
 Templates section contains a list of rule generation objects that control the identification of an Ioc, Its output, and default values. Each generation object have the following options:
